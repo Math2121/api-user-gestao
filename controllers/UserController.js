@@ -1,6 +1,8 @@
 const PasswordToken = require("../models/PasswordToken")
 const User = require("../models/User")
-
+const bcrypt = require('bcrypt')
+const jwt = require("jsonwebtoken")
+const secret = "555555sa5a5s5ds5"
 class UserController {
     async index(req, res) {
         var user = await User.findAll()
@@ -96,6 +98,25 @@ class UserController {
         } else {
             res.status(406)
             res.json({err: "Token inválido"})
+        }
+    }
+    async login(req, res) {
+        const { email, password } = req.body
+        const user = await User.findByEmail(email)
+        if (user != undefined) {
+            const result = await bcrypt.compare(password, user.password)
+            if (result) {
+                var token = jwt.sign({ email:user.email,role:user.role }, secret);
+                res.status(200)
+                res.json({ status: token })
+            } else {
+                res.status(400)
+                res.json({ err:"Senha inválida" })
+            }
+            
+        } else {
+            res.status(404)
+            res.json({ status: false })
         }
     }
 }
